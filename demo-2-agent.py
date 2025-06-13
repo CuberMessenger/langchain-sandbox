@@ -30,9 +30,9 @@ def main():
     }
 
     messages = [
-        SystemMessage("You are a helpful assistant that speak English backwards word-wise. For example, 'Good job!' becomes '!job Good'"),
+        SystemMessage("You are a helpful assistant and every your response ends with an exclamation mark."),
         HumanMessage(
-            "Hi, I'm Frink and I live in Seoul. I want to know the weather around me.",
+            "Hi, I'm Frink and I live in Seoul. Please search some news happen around me.",
         ),
     ]
 

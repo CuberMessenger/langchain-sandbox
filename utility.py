@@ -1,33 +1,53 @@
 import os
+import pickle
 import getpass
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
-"""
-In powershell, you can set environment variables like this:
+class LocalEnvironment:
+    ENVIRONMENT_DATA_FILE = "env.pkl"
 
-$Env:GOOGLE_API_KEY = "your_api_key"
-$Env:GOOGLE_CSE_ID = "your_cse_id"
-...
-Clear-History
-"""
+    GOOGLE_API_KEY = None
+    GOOGLE_CSE_ID = None
 
+    @staticmethod
+    def prepare_environment():
 
-def get_google_api_key():
-    if os.environ["GOOGLE_API_KEY"] is None:
-        os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google API Key: ")
-    return os.environ["GOOGLE_API_KEY"]
+        data = {
+            "GOOGLE_API_KEY": getpass.getpass("Enter your Google API Key: "),
+            "GOOGLE_CSE_ID": getpass.getpass("Enter your Google CSE ID: "),
+        }
 
+        with open(LocalEnvironment.ENVIRONMENT_DATA_FILE, "wb") as file:
+            pickle.dump(data, file)
 
-def get_google_cse_id():
-    if os.environ.get("GOOGLE_CSE_ID") is None:
-        os.environ["GOOGLE_CSE_ID"] = getpass.getpass("Enter your Google CSE ID: ")
-    return os.environ["GOOGLE_CSE_ID"]
+    @staticmethod
+    def load_environment():
+        if not os.path.exists(LocalEnvironment.ENVIRONMENT_DATA_FILE):
+            LocalEnvironment.prepare_environment()
+
+        with open(LocalEnvironment.ENVIRONMENT_DATA_FILE, "rb") as file:
+            data = pickle.load(file)
+
+        LocalEnvironment.GOOGLE_API_KEY = data["GOOGLE_API_KEY"]
+        LocalEnvironment.GOOGLE_CSE_ID = data["GOOGLE_CSE_ID"]
+
+    @staticmethod
+    def get_google_api_key():
+        if LocalEnvironment.GOOGLE_API_KEY is None:
+            LocalEnvironment.load_environment()
+        return LocalEnvironment.GOOGLE_API_KEY
+    
+    @staticmethod
+    def get_google_cse_id():
+        if LocalEnvironment.GOOGLE_CSE_ID is None:
+            LocalEnvironment.load_environment()
+        return LocalEnvironment.GOOGLE_CSE_ID
 
 
 def get_google_model(name="gemini-2.0-flash"):
-    api_key = get_google_api_key()
+    api_key = LocalEnvironment.get_google_api_key()
 
     model = ChatGoogleGenerativeAI(
         model=name,

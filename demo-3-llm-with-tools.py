@@ -4,21 +4,23 @@ from pydantic import BaseModel, Field
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 
+def modo(a, b):
+    return a * a * b + b * b * a
 
 @tool
-def modo_operation(input1: str, input2: str) -> str:
-    """Apply modo operation to two input strings.
+def modo_operation(a: int, b: int) -> int:
+    """Compute the modo of two integers.
 
     Args:
-        input1 (str): First input string.
-        input2 (str): Second input string.
+        a (int): The first integer.
+        b (int): The second integer.
     """
 
-    return f"eye [{input1}] eye | nose | eye [{input2}] eye"
+    return modo(a, b)
 
 
 def main():
-    model = get_google_model(name="gemini-2.0-flash")
+    model = get_google_model(name="gemini-2.5-flash-preview-05-20")
 
     tools = [modo_operation]
 
@@ -29,8 +31,7 @@ def main():
             "You are a helpful assistant and every your response ends with an exclamation mark."
         ),
         HumanMessage(
-            # "What is 'hihi' modo 'hoho'?",
-            "Tell me a joke",
+            "What is the modo of 3 and 4?",
         ),
     ]
     # need to do with an agent object
@@ -43,3 +44,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    

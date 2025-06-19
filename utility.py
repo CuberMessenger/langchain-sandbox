@@ -2,7 +2,7 @@ import os
 import pickle
 import getpass
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 
 
 class LocalEnvironment:
@@ -58,3 +58,17 @@ def get_google_model(name="gemini-2.0-flash"):
     )
 
     return model
+
+def get_google_embedding_model(name="models/text-embedding-004"):
+    api_key = LocalEnvironment.get_google_api_key()
+
+    embedding_model = GoogleGenerativeAIEmbeddings(
+        model=name,
+        google_api_key=api_key,
+        transport="rest",
+        timeout=30,
+        max_retries=3,
+    )
+
+    return embedding_model
+

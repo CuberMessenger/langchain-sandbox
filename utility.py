@@ -60,7 +60,11 @@ def get_google_model(name="gemini-2.0-flash"):
     return model
 
 
-def get_google_embedding_model(name="models/gemini-embedding-exp-03-07"):
+def get_google_embedding_model(name="models/text-embedding-004"):
+    """
+    models/gemini-embedding-exp-03-07
+    models/text-embedding-004
+    """
     api_key = LocalEnvironment.get_google_api_key()
 
     embedding_model = GoogleGenerativeAIEmbeddings(
@@ -74,7 +78,8 @@ def get_google_embedding_model(name="models/gemini-embedding-exp-03-07"):
     return embedding_model
 
 
-def monkey_patch_embedding_size(in_memory_vector_store):
+def monkey_patch_in_memory_vector_store(in_memory_vector_store):
+    ### patch 1: add output_dimensionality parameter to add_documents method
     import uuid
     import types
 
@@ -124,3 +129,23 @@ def monkey_patch_embedding_size(in_memory_vector_store):
     in_memory_vector_store.add_documents = types.MethodType(
         add_documents_patched, in_memory_vector_store
     )
+    ### patch 1: add output_dimensionality parameter to add_documents method
+
+    ### patch 2: add indent to dump method
+    import json
+    from pathlib import Path
+    from langchain_core.load import dumpd
+
+    def dump_patched(self, path: str, indent: Optional[int] = 2) -> None:
+        """Dump the vector store to a file.
+
+        Args:
+            path: The path to dump the vector store to.
+        """
+        _path: Path = Path(path)
+        _path.parent.mkdir(exist_ok=True, parents=True)
+        with _path.open("w") as f:
+            json.dump(dumpd(self.store), f, indent=indent)
+
+    in_memory_vector_store.dump = types.MethodType(dump_patched, in_memory_vector_store)
+    ### patch 2: add indent to dump method

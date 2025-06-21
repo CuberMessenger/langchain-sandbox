@@ -60,7 +60,7 @@ def get_google_model(name="gemini-2.0-flash"):
     return model
 
 
-def get_google_embedding_model(name="models/text-embedding-004"):
+def get_google_embedding_model(name="models/gemini-embedding-exp-03-07"):
     """
     models/gemini-embedding-exp-03-07
     models/text-embedding-004

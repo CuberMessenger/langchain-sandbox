@@ -3,6 +3,7 @@ import tqdm
 import asyncio
 
 from utility import *
+from time import sleep
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
@@ -25,7 +26,7 @@ def main():
 
     # embeds = embedding_model.embed_documents(
     #     ["Lorem ipsum dolor sit amet, consectetur adipiscing elit."],
-    #     output_dimensionality=3072  # Specify the output dimensionality
+    #     output_dimensionality=3072
     # )
 
     # print(embeds[0])
@@ -47,7 +48,9 @@ def main():
 
     # print(chunks[10])
 
-    vector_store.add_documents(documents=chunks, output_dimensionality=None)  # Need TUN mode to go through proxy
+    for chunk in tqdm.tqdm(chunks, desc="Embedding chunks ......"):
+        vector_store.add_documents(documents=[chunk], output_dimensionality=3072)  # Need TUN mode to go through proxy
+        sleep(1)  # Avoid overwheling the experimental API
 
     docs = vector_store.similarity_search(
         "On April 13, 1867, what's the speed and location of Scotia?", k=2

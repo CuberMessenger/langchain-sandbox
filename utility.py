@@ -55,6 +55,7 @@ def get_google_model(name="gemini-2.0-flash"):
         transport="rest",
         timeout=30,
         max_retries=3,
+        thinking_budget=0,
     )
 
     return model

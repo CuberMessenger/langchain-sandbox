@@ -31,7 +31,8 @@ class VectorStoreCache:
 
 @tool
 def TTLUTS_retriever(query: str) -> str:
-    """A retriever tool for the first 8 chapters of TTLUTS (Twenty Thousand Leagues Under The Sea).
+    """
+    A retriever tool for the first 8 chapters of TTLUTS (Twenty Thousand Leagues Under The Sea).
 
     Args:
         query: keyword or content to search for in the book.
@@ -42,39 +43,90 @@ def TTLUTS_retriever(query: str) -> str:
     return "\n\n".join([doc.page_content for doc in docs])
 
 
+@tool
+def modo_calculator(expression: str) -> str:
+    """
+    A calculator that compute the "modo" of a given string format expression.
+
+    Args:
+        expression: a string.
+    """
+
+    modo = f"!!{expression}!!modo!!{expression}!!"
+    return modo
+
+
 def main():
-    query_or_response_model = get_google_model().bind_tools([TTLUTS_retriever])
-    response_model = get_google_model()
-
-    messages = [
-        SystemMessage(
-            "You are a helpful assistant and every your response ends with an exclamation mark."
-        ),
-        HumanMessage(
-            "What happened on April 13, 1867, in the Twenty Thousand Leagues Under The Sea?"
-        ),
-        # HumanMessage(
-        #     "Tell me about the myth figure Pandora and her box."
-        # ),
-    ]
-
-    tool_dict = {
-        "ttluts_retriever": TTLUTS_retriever,
+    tool_dictionary = {
+        "TTLUTS_retriever": TTLUTS_retriever,
+        "modo_calculator": modo_calculator,
     }
 
-    response = query_or_response_model.invoke(messages)
-    print("#" * 0x7F)
-    print(response)
+    query_or_respond_prompt = "You are a helpful assistant with some powerful tools. If you think no tools are needed to answer the given question, response nothing."
+    query_or_respond_model = get_google_model(
+        "gemini-2.5-flash-lite-preview-06-17"
+    ).bind_tools(tool_dictionary.values())
 
-    if response.tool_calls is not None:
+    response_prompt = "You are a helpful assistant and every your response ends with an exclamation mark."
+    response_model = get_google_model("gemini-2.5-flash")
+
+    # question = (
+    #     "What happened on April 13, 1867, in the Twenty Thousand Leagues Under The Sea?"
+    # )
+
+    def workflow(question):
+        print("#" * 0x7F)
+
+        messages = [
+            SystemMessage(content=query_or_respond_prompt),
+            HumanMessage(content=question),
+        ]
+
+        tool_messages = []
+        response = query_or_respond_model.invoke(messages)
+        if len(response.tool_calls) == 0:
+            print("No tool calls detected. Response:")
         for tool_call in response.tool_calls:
-            tool = tool_dict[tool_call["name"].lower()]
+            tool = tool_dictionary[tool_call["name"]]
             tool_message = tool.invoke(tool_call)
-            messages.append(tool_message)
+            tool_messages.append(tool_message)
+            print(f"{tool_call['name']} called!")
+
+        messages = [
+            SystemMessage(content=response_prompt),
+            HumanMessage(content=question),
+            response, # the tool calling AI message is essential
+        ] + tool_messages
 
         response = response_model.invoke(messages)
-        print("#" * 0x7F)
         print(response)
+        print()
+
+        
+
+    # workflow(
+    #     "What happened on April 13, 1867, in the Twenty Thousand Leagues Under The Sea?"
+    # )
+    workflow(
+        "What happened on April 13, 1867, in the Twenty Thousand Leagues Under The Sea? By the way, what is the modo of the word 'cat'?"
+    )
+    # workflow("Tell me about Pandora in the Greek myth.")
+    # workflow("Tell me about Pandora in the Greek myth. Also, what is the modo of 'Pandora'?")
+
+
+    # response = query_or_respond_model.invoke(messages)
+    # print("#" * 0x7F)
+    # print(response)
+
+    # if response.tool_calls is not None:
+    #     for tool_call in response.tool_calls:
+    #         tool = tool_dict[tool_call["name"].lower()]
+    #         tool_message = tool.invoke(tool_call)
+    #         messages.append(tool_message)
+
+    #     response = response_model.invoke(messages)
+    #     print("#" * 0x7F)
+    #     print(response)
 
 
 if __name__ == "__main__":

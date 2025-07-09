@@ -29,37 +29,40 @@ class VectorStoreCache:
         return VectorStoreCache.VECTOR_STORE
 
 
-@tool
-def TTLUTS_retriever(query: str) -> str:
-    """
-    A retriever tool for the first 8 chapters of TTLUTS (Twenty Thousand Leagues Under The Sea).
+class DummyToolClass:
 
-    Args:
-        query: keyword or content to search for in the book.
-    """
+    @tool
+    @staticmethod
+    def TTLUTS_retriever(query: str) -> str:
+        """
+        A retriever tool for the first 8 chapters of TTLUTS (Twenty Thousand Leagues Under The Sea).
 
-    vector_store = VectorStoreCache.get_vector_store()
-    docs = vector_store.similarity_search(query, k=3)
-    return "\n\n".join([doc.page_content for doc in docs])
+        Args:
+            query: keyword or content to search for in the book.
+        """
 
+        vector_store = VectorStoreCache.get_vector_store()
+        docs = vector_store.similarity_search(query, k=3)
+        return "\n\n".join([doc.page_content for doc in docs])
 
-@tool
-def modo_calculator(expression: str) -> str:
-    """
-    A calculator that compute the "modo" of a given string format expression.
+    @tool
+    @staticmethod
+    def modo_calculator(expression: str) -> str:
+        """
+        A calculator that compute the "modo" of a given string format expression.
 
-    Args:
-        expression: a string.
-    """
+        Args:
+            expression: a string.
+        """
 
-    modo = f"!!{expression}!!modo!!{expression}!!"
-    return modo
+        modo = f"!!{expression}!!modo!!{expression}!!"
+        return modo
 
 
 def main():
     tool_dictionary = {
-        "TTLUTS_retriever": TTLUTS_retriever,
-        "modo_calculator": modo_calculator,
+        "TTLUTS_retriever": DummyToolClass.TTLUTS_retriever,
+        "modo_calculator": DummyToolClass.modo_calculator,
     }
 
     query_or_respond_prompt = "You are a helpful assistant with some powerful tools. If you think no tools are needed to answer the given question, response nothing."
@@ -95,14 +98,12 @@ def main():
         messages = [
             SystemMessage(content=response_prompt),
             HumanMessage(content=question),
-            response, # the tool calling AI message is essential
+            response,  # the tool calling AI message is essential
         ] + tool_messages
 
         response = response_model.invoke(messages)
         print(response)
         print()
-
-        
 
     # workflow(
     #     "What happened on April 13, 1867, in the Twenty Thousand Leagues Under The Sea?"
@@ -112,7 +113,6 @@ def main():
     )
     # workflow("Tell me about Pandora in the Greek myth.")
     # workflow("Tell me about Pandora in the Greek myth. Also, what is the modo of 'Pandora'?")
-
 
     # response = query_or_respond_model.invoke(messages)
     # print("#" * 0x7F)
